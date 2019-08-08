@@ -14,7 +14,7 @@ type User struct {
 	UpdatedAt time.Time
 }
 
-func (u *User) Create() (User, error) {
+func (u *User) Create() (*User, error) {
 	err := DB.Create(&u).Error
 	return u, err
 }
