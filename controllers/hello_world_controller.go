@@ -16,7 +16,6 @@ func (c *HelloWorldController) BeforeActivation(b mvc.BeforeActivation) {
 		ctx.Next()
 	}
 	b.Handle("GET", "/home", "Home", middleware)
-	b.Handle("GET", "/{id:int}", "Text", middleware)
 }
 
 func (c *HelloWorldController) Home() (mes string, err error, statusCode int) {
