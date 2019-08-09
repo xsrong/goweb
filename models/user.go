@@ -16,12 +16,16 @@ type User struct {
 }
 
 func (u *User) Create() error {
+	if u.Password == nil {
+		err := errors.New("Error occured when creating user")
+		return err
+	}
 	plain := *u.Password
 	encrypt := Encrypt(plain)
 	u.Password = &encrypt
 	err := DB.Create(&u).Error
 	if err != nil {
-		err = errors.New("Error occured when creating user.")
+		err = errors.New("Error occured when creating user")
 	}
 	return err
 }

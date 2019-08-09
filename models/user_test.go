@@ -20,16 +20,22 @@ func TestUserCreate(t *testing.T) {
 	err := users[0].Create() // 测试Email为空的情况
 	if err == nil {
 		t.Error("excepted get an error but no error occured.")
+	} else if err.Error() != "Error occured when creating user" {
+		t.Errorf("excepted get \"Error occured when creating user\" but got \"%s\"\n", err.Error())
 	}
 
 	err = users[1].Create() // 测试Passworld为空的情况
 	if err == nil {
 		t.Error("excepted get an error but no error occured.")
+	} else if err.Error() != "Error occured when creating user" {
+		t.Errorf("excepted get \"Error occured when creating user\" but got \"%s\"\n", err)
 	}
 
 	err = users[2].Create() // 测试Username为空的情况
 	if err == nil {
 		t.Error("excepted get an error but no error occured.")
+	} else if err.Error() != "Error occured when creating user" {
+		t.Errorf("excepted get \"Error occured when creating user\" but got \"%s\"\n", err.Error())
 	}
 
 	err = users[3].Create() // 测试Message为空的情况，注：Message允许为空
@@ -45,10 +51,14 @@ func TestUserCreate(t *testing.T) {
 	err = users[5].Create() // 测试Email发生重复的情况
 	if err == nil {
 		t.Error("excepted get an error but no error occured.")
+	} else if err.Error() != "Error occured when creating user" {
+		t.Errorf("excepted get \"Error occured when creating user\" but got \"%s\"\n", err.Error())
 	}
 
 	err = users[6].Create() // 测试Username发生重复的情况
 	if err == nil {
 		t.Error("excepted get an error but no error occured.")
+	} else if err.Error() != "Error occured when creating user" {
+		t.Errorf("excepted get \"Error occured when creating user\" but got \"%s\"\n", err.Error())
 	}
 }
