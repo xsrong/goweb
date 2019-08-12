@@ -40,5 +40,11 @@
     "email":    "email7@exam.com",
     "password": "password",
     "username": "username5"
+  },
+
+  {
+    "email":    "email8@exam_ple.com",
+    "password": "password8",
+    "username": "username8"
   }
 ]

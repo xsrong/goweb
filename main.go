@@ -1,12 +1,13 @@
 package main
 
 import (
+	"time"
+
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
 	"github.com/kataras/iris/mvc"
-
-	// "github.com/kataras/iris/sessions"
+	"github.com/kataras/iris/sessions"
 
 	"goweb/controllers"
 )
@@ -21,11 +22,11 @@ func weiboApp() *iris.Application {
 	app.Use(recover.New())
 	app.Use(logger.New())
 	weiboApp := mvc.New(app)
-	// sess := sessions.New(sessions.Config{Cookie: "weibo_app_cookie"})
-	// weiboApp.Register(
-	// 	sess.Start,
-	// )
-
+	expiresTime, _ := time.ParseDuration("168h")
+	sess := sessions.New(sessions.Config{Cookie: "weibo_app_cookie", Expires: expiresTime})
+	weiboApp.Register(
+		sess.Start,
+	)
 	helloWorldController := new(controllers.HelloWorldController)
 	usersController := new(controllers.UsersController)
 	weiboApp.Handle(helloWorldController)

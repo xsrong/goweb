@@ -11,6 +11,7 @@ import (
 )
 
 func TestUserCreate(t *testing.T) {
+	models.DB.Delete(&models.User{})
 	ctx := context.NewContext(iris.New())
 	file, _ := os.Open("sample_user.json")
 	defer file.Close()
@@ -42,4 +43,30 @@ func TestUserCreate(t *testing.T) {
 		t.Error(err)
 	}
 
+}
+
+func TestFindUserByID(t *testing.T) {
+	id := 1
+	controller := UsersController{}
+	user, err := controller.Show(id)
+	if user.ID != 1 || err != nil {
+		t.Error("expected to show user but error occured:", user, err)
+	}
+}
+
+func TestUserLogin(t *testing.T) {
+	ctx := context.NewContext(iris.New())
+	file, _ := os.Open("sample_login_user.json")
+	defer file.Close()
+	newRequest, _ := http.NewRequest("POST", "/login", nil)
+	newRequest.ContentLength = 500
+	newRequest.Body = file
+	ctx.ResetRequest(newRequest)
+
+	controller := UsersController{}
+	controller.Login(ctx)
+	id, _ := controller.Session.GetInt("id")
+	if id != 1 {
+		t.Errorf("expectd user id in session to be 1, but got %d", id)
+	}
 }

@@ -20,3 +20,23 @@ func TestUsersCreateRoute(t *testing.T) {
 	request.WithJSON(map[string]interface{}{"email": "email1@example.com", "password": "password1", "username": "username1", "message": "message1"})
 	request.Expect().Status(httptest.StatusOK)
 }
+
+func TestUsersShowRoute(t *testing.T) {
+	app := weiboApp()
+	e := httptest.New(t, app)
+
+	request := e.Request("GET", "/users/1")
+	response := request.Expect()
+	response.Status(httptest.StatusOK)
+
+	response.Body().Equal(`{
+ "ID": 1,
+ "Email": null,
+ "Password": null,
+ "Username": "username1",
+ "Message": "message1",
+ "CreatedAt": "0001-01-01T00:00:00Z",
+ "UpdatedAt": "0001-01-01T00:00:00Z"
+}
+`)
+}
