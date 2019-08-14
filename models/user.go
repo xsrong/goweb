@@ -68,12 +68,15 @@ func FindUserByUsername(username string) (user User, err error) {
 	return
 }
 
-func (u *User) Authenticate() (ok bool, err error) {
-	user, _ := FindUserByEmail(*u.Email)
+func (u *User) Authenticate() (user User, err error) {
+	user, err = FindUserByEmail(*u.Email)
+	if err != nil {
+		return
+	}
 	if user.ID == 0 || *user.Password != Encrypt(*u.Password) {
+		user = User{}
 		err = errors.New("Invalid email or password")
 		return
 	}
-	ok = true
 	return
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/kataras/iris/sessions"
 
 	"goweb/controllers"
+	"goweb/models"
 )
 
 func main() {
@@ -26,6 +27,7 @@ func weiboApp() *iris.Application {
 	sess := sessions.New(sessions.Config{Cookie: "weibo_app_cookie", Expires: expiresTime})
 	weiboApp.Register(
 		sess.Start,
+		models.User{},
 	)
 	helloWorldController := new(controllers.HelloWorldController)
 	usersController := new(controllers.UsersController)

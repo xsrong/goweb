@@ -123,21 +123,23 @@ func TestFindUserByUsername(t *testing.T) {
 func TestUserAuthenticate(t *testing.T) {
 	users := setup("test_auth_data.json")
 
-	if ok, err := users[0].Authenticate(); ok {
+	if _, err := users[0].Authenticate(); err == nil {
 		if err.Error() != "Invalid email or password" {
 			t.Errorf("expected get \"Invalid email or password\" but got \"%s\"\n", err.Error())
 		}
 		t.Error("expected authentication fail but it passed")
 	}
 
-	if ok, err := users[1].Authenticate(); ok {
+	if _, err := users[1].Authenticate(); err == nil {
 		if err.Error() != "Invalid email or password" {
 			t.Errorf("expected get \"Invalid email or password\" but got \"%s\"\n", err.Error())
 		}
 		t.Error("expected authentication fail but it passed")
 	}
 
-	if ok, err := users[2].Authenticate(); !ok {
-		t.Error("excepted authentication pass but it failed cause:", err)
+	if user, err := users[2].Authenticate(); err != nil {
+		t.Error("expected authentication pass but it failed cause:", err)
+	} else if user.ID != 3 {
+		t.Errorf("expected user id to be 3 but got %d\n", user.ID)
 	}
 }

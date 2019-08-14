@@ -3,15 +3,16 @@ package controllers
 import (
 	"goweb/models"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/context"
+	"github.com/kataras/iris/sessions"
 )
 
 func TestUserCreate(t *testing.T) {
-	models.DB.Delete(&models.User{})
 	ctx := context.NewContext(iris.New())
 	file, _ := os.Open("sample_user.json")
 	defer file.Close()
@@ -19,7 +20,6 @@ func TestUserCreate(t *testing.T) {
 	newRequest.ContentLength = 500
 	newRequest.Body = file
 	ctx.ResetRequest(newRequest)
-
 	controller := UsersController{}
 	user, err := controller.Create(ctx)
 
@@ -55,7 +55,14 @@ func TestFindUserByID(t *testing.T) {
 }
 
 func TestUserLogin(t *testing.T) {
-	ctx := context.NewContext(iris.New())
+	app := iris.New()
+	ctx := context.NewContext(app)
+
+	w := context.AcquireResponseWriter()
+	hw := httptest.NewRecorder()
+	w.BeginResponse(hw)
+	ctx.ResetResponseWriter(w)
+
 	file, _ := os.Open("sample_login_user.json")
 	defer file.Close()
 	newRequest, _ := http.NewRequest("POST", "/login", nil)
@@ -64,9 +71,23 @@ func TestUserLogin(t *testing.T) {
 	ctx.ResetRequest(newRequest)
 
 	controller := UsersController{}
-	controller.Login(ctx)
-	id, _ := controller.Session.GetInt("id")
+	cookie := http.Cookie{Name: "sample_cookie_uuid", Value: ""}
+	ctx.SetCookie(&cookie)
+	sess := sessions.New(sessions.Config{Cookie: "weibo_app_cookie", Expires: 120000000000})
+	controller.Session = sess.Start(ctx)
+	user, err := controller.Login(ctx)
+
+	if err != nil {
+		t.Error("expected no error, but an error occured:", err)
+	}
+	if user.ID != 1 {
+		t.Errorf("expected returned user id to be 1, but got %d\n:", user.ID)
+	}
+	id, _ := controller.Session.GetInt("userID")
 	if id != 1 {
-		t.Errorf("expectd user id in session to be 1, but got %d", id)
+		t.Errorf("expected user id in session to be 1, but got %d\n", id)
+	}
+	if crtUsrID:= CurrentUser(ctx, controller.Session).ID; crtUsrID != 1 {
+		t.Errorf("expected current user id to be 1, but got %d\n", crtUsrID)
 	}
 }

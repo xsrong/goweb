@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"fmt"
 	"goweb/models"
+	"strconv"
 
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/mvc"
@@ -18,9 +18,11 @@ func (c *UsersController) BeforeActivation(b mvc.BeforeActivation) {
 		ctx.Application().Logger()
 		ctx.Next()
 	}
+
 	b.Handle("POST", "/users/new", "Create", middleware)
 	b.Handle("GET", "/users/{id:int}", "Show", middleware)
-	b.Handle("GET", "/get_session", "GetSession", middleware)
+	b.Handle("POST", "/login", "Login", middleware)
+	b.Handle("GET", "/get_id", "GetCurrentUserID", middleware)
 }
 
 func (c *UsersController) Create(ctx iris.Context) (user models.User, err error) {
@@ -42,13 +44,14 @@ func (c *UsersController) Login(ctx iris.Context) (user models.User, err error) 
 		ctx.StatusCode(iris.StatusBadRequest)
 		return
 	}
-	if ok, err := user.Authenticate(); !ok {
-		return user, err
+	if user, err = user.Authenticate(); err != nil {
+		return
 	}
 	c.Session.Set("userID", user.ID)
 	return
 }
 
-func (c *UsersController) GetSession() {
-	fmt.Println(c.Session.Lifetime)
+func (c *UsersController) GetCurrentUserID(ctx iris.Context) string {
+	user := CurrentUser(ctx, c.Session)
+	return "the user id is " + strconv.Itoa(user.ID)
 }
