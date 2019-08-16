@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"errors"
 	"goweb/models"
-	"strconv"
 
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/mvc"
@@ -21,8 +21,8 @@ func (c *UsersController) BeforeActivation(b mvc.BeforeActivation) {
 
 	b.Handle("POST", "/users/new", "Create", middleware)
 	b.Handle("GET", "/users/{id:int}", "Show", middleware)
+	b.Handle("POST", "/users/{id:int}/edit", "Update", middleware)
 	b.Handle("POST", "/login", "Login", middleware)
-	b.Handle("GET", "/get_id", "GetCurrentUserID", middleware)
 }
 
 func (c *UsersController) Create(ctx iris.Context) (user models.User, err error) {
@@ -36,6 +36,7 @@ func (c *UsersController) Create(ctx iris.Context) (user models.User, err error)
 
 func (c *UsersController) Show(id int) (user models.User, err error) {
 	user, err = models.FindUserByID(id)
+	// ctx.Header("Access-Control-Allow-Origin", "*")
 	return
 }
 
@@ -51,7 +52,21 @@ func (c *UsersController) Login(ctx iris.Context) (user models.User, err error) 
 	return
 }
 
-func (c *UsersController) GetCurrentUserID(ctx iris.Context) string {
-	user := CurrentUser(ctx, c.Session)
-	return "the user id is " + strconv.Itoa(user.ID)
+func (c *UsersController) Update(id int, ctx iris.Context) (user models.User, err error) {
+	userID, err := c.Session.GetInt("userID")
+	if err != nil || userID != id {
+		err = errors.New("authenticate failed! please login and try again")
+		return
+	}
+	params := map[string]string{}
+	if err = ctx.ReadJSON(&params); err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		return
+	}
+	user, err = models.FindUserByID(id)
+	if err != nil {
+		return
+	}
+	err = user.Update(params)
+	return
 }

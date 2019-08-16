@@ -80,3 +80,21 @@ func (u *User) Authenticate() (user User, err error) {
 	}
 	return
 }
+
+func (u *User) Update(params map[string]string) (err error) {
+	var password, username *string
+	pwd := params["password"]
+	if pwd != "" {
+		encrypt := Encrypt(pwd)
+		password = &encrypt
+	}
+	usn := params["username"]
+	if usn != "" {
+		username = &usn
+	}
+	err = DB.Model(&u).Updates(User{Password: password, Username: username, Message: params["message"]}).Error
+	if err != nil {
+		err = errors.New("Error occured when updating user")
+	}
+	return
+}

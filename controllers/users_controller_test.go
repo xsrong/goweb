@@ -28,15 +28,15 @@ func TestUserCreate(t *testing.T) {
 	}
 
 	if *user.Password != models.Encrypt("password1") {
-		t.Errorf("Email is expected to be \"%s\" but got \"%s\"\n", models.Encrypt("password1"), *user.Password)
+		t.Errorf("Password is expected to be \"%s\" but got \"%s\"\n", models.Encrypt("password1"), *user.Password)
 	}
 
 	if *user.Username != "username1" {
-		t.Errorf("Email is expected to be \"username1\" but got \"%s\"\n", *user.Username)
+		t.Errorf("Username is expected to be \"username1\" but got \"%s\"\n", *user.Username)
 	}
 
 	if user.Message != "message1" {
-		t.Errorf("Email is expected to be \"message1\" but got \"%s\"\n", user.Message)
+		t.Errorf("Message is expected to be \"message1\" but got \"%s\"\n", user.Message)
 	}
 
 	if err != nil {
@@ -45,16 +45,54 @@ func TestUserCreate(t *testing.T) {
 
 }
 
-func TestFindUserByID(t *testing.T) {
-	id := 1
-	controller := UsersController{}
-	user, err := controller.Show(id)
-	if user.ID != 1 || err != nil {
-		t.Error("expected to show user but error occured:", user, err)
-	}
-}
+// func TestFindUserByID(t *testing.T) {
+// 	id := 1
+// 	controller := UsersController{}
+// 	user, err := controller.Show(id)
+// 	if user.ID != 1 || err != nil {
+// 		t.Error("expected to show user but error occured:", user, err)
+// 	}
+// }
 
-func TestUserLogin(t *testing.T) {
+// func TestUserLogin(t *testing.T) {
+// 	app := iris.New()
+// 	ctx := context.NewContext(app)
+
+// 	w := context.AcquireResponseWriter()
+// 	hw := httptest.NewRecorder()
+// 	w.BeginResponse(hw)
+// 	ctx.ResetResponseWriter(w)
+
+// 	file, _ := os.Open("sample_login_user.json")
+// 	defer file.Close()
+// 	newRequest, _ := http.NewRequest("POST", "/login", nil)
+// 	newRequest.ContentLength = 500
+// 	newRequest.Body = file
+// 	ctx.ResetRequest(newRequest)
+
+// 	controller := UsersController{}
+// 	cookie := http.Cookie{Name: "sample_cookie_uuid", Value: ""}
+// 	ctx.SetCookie(&cookie)
+// 	sess := sessions.New(sessions.Config{Cookie: "weibo_app_cookie", Expires: 120000000000})
+// 	controller.Session = sess.Start(ctx)
+// 	user, err := controller.Login(ctx)
+
+// 	if err != nil {
+// 		t.Error("expected no error, but an error occured:", err)
+// 	}
+// 	if user.ID != 1 {
+// 		t.Errorf("expected returned user id to be 1, but got %d\n:", user.ID)
+// 	}
+// 	id, _ := controller.Session.GetInt("userID")
+// 	if id != 1 {
+// 		t.Errorf("expected user id in session to be 1, but got %d\n", id)
+// 	}
+// 	if crtUsrID := CurrentUser(ctx, controller.Session).ID; crtUsrID != 1 {
+// 		t.Errorf("expected current user id to be 1, but got %d\n", crtUsrID)
+// 	}
+// }
+
+func TestUserUpdate(t *testing.T) {
 	app := iris.New()
 	ctx := context.NewContext(app)
 
@@ -63,9 +101,9 @@ func TestUserLogin(t *testing.T) {
 	w.BeginResponse(hw)
 	ctx.ResetResponseWriter(w)
 
-	file, _ := os.Open("sample_login_user.json")
+	file, _ := os.Open("update_user.json")
 	defer file.Close()
-	newRequest, _ := http.NewRequest("POST", "/login", nil)
+	newRequest, _ := http.NewRequest("POST", "users/1/edit", nil)
 	newRequest.ContentLength = 500
 	newRequest.Body = file
 	ctx.ResetRequest(newRequest)
@@ -75,19 +113,29 @@ func TestUserLogin(t *testing.T) {
 	ctx.SetCookie(&cookie)
 	sess := sessions.New(sessions.Config{Cookie: "weibo_app_cookie", Expires: 120000000000})
 	controller.Session = sess.Start(ctx)
-	user, err := controller.Login(ctx)
+	user, err := controller.Update(1, ctx)
+
+	if err.Error() != "authenticate failed! please login and try again" {
+		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
+	}
+
+	controller.Session.Set("userID", 1)
+	user, err = controller.Update(1, ctx)
+
+	if *user.Password != models.Encrypt("newPassword") {
+		t.Errorf("Password is expected to be \"%s\" but got \"%s\"\n", models.Encrypt("newPassword"), *user.Password)
+	}
+
+	if *user.Username != "new username" {
+		t.Errorf("Username is expected to be \"new username\" but got \"%s\"\n", *user.Username)
+	}
+
+	if user.Message != "new message" {
+		t.Errorf("Message is expected to be \"new message\" but got \"%s\"\n", user.Message)
+	}
 
 	if err != nil {
-		t.Error("expected no error, but an error occured:", err)
+		t.Error(err)
 	}
-	if user.ID != 1 {
-		t.Errorf("expected returned user id to be 1, but got %d\n:", user.ID)
-	}
-	id, _ := controller.Session.GetInt("userID")
-	if id != 1 {
-		t.Errorf("expected user id in session to be 1, but got %d\n", id)
-	}
-	if crtUsrID:= CurrentUser(ctx, controller.Session).ID; crtUsrID != 1 {
-		t.Errorf("expected current user id to be 1, but got %d\n", crtUsrID)
-	}
+
 }
