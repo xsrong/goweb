@@ -21,8 +21,9 @@ func (c *UsersController) BeforeActivation(b mvc.BeforeActivation) {
 
 	b.Handle("POST", "/users/new", "Create", middleware)
 	b.Handle("GET", "/users/{id:int}", "Show", middleware)
-	b.Handle("POST", "/users/{id:int}/edit", "Update", middleware)
+	b.Handle("PATCH", "/users/{id:int}/edit", "Update", middleware)
 	b.Handle("POST", "/login", "Login", middleware)
+	b.Handle("DELETE", "/logout", "Logout", middleware)
 }
 
 func (c *UsersController) Create(ctx iris.Context) (user models.User, err error) {
@@ -49,6 +50,18 @@ func (c *UsersController) Login(ctx iris.Context) (user models.User, err error) 
 		return
 	}
 	c.Session.Set("userID", user.ID)
+	return
+}
+
+func (c *UsersController) Logout() (err error) {
+	_, err = c.Session.GetInt("userID")
+	if err != nil {
+		err = errors.New("not logged in")
+		return
+	}
+	if !c.Session.Delete("userID") {
+		err = errors.New("logout failed. please try again later")
+	}
 	return
 }
 

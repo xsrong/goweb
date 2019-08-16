@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"goweb/models"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -12,14 +13,32 @@ import (
 	"github.com/kataras/iris/sessions"
 )
 
+func setCtxRequest(ctx iris.Context, body io.ReadCloser, contentLength int64) {
+	newRequest, _ := http.NewRequest("FAKEMETHOD", "/fake_path", nil)
+	newRequest.Body = body
+	newRequest.ContentLength = contentLength
+	ctx.ResetRequest(newRequest)
+}
+
+func setCtxResponse(ctx iris.Context) {
+	w := context.AcquireResponseWriter()
+	hw := httptest.NewRecorder()
+	w.BeginResponse(hw)
+	ctx.ResetResponseWriter(w)
+}
+
+func setSession(ctx iris.Context, controller *UsersController) {
+	cookie := http.Cookie{Name: "sample_cookie_uuid", Value: ""}
+	ctx.SetCookie(&cookie)
+	sess := sessions.New(sessions.Config{Cookie: "weibo_app_cookie", Expires: 120000000000})
+	controller.Session = sess.Start(ctx)
+}
+
 func TestUserCreate(t *testing.T) {
 	ctx := context.NewContext(iris.New())
 	file, _ := os.Open("sample_user.json")
 	defer file.Close()
-	newRequest, _ := http.NewRequest("POST", "users/new", nil)
-	newRequest.ContentLength = 500
-	newRequest.Body = file
-	ctx.ResetRequest(newRequest)
+	setCtxRequest(ctx, file, 500)
 	controller := UsersController{}
 	user, err := controller.Create(ctx)
 
@@ -45,74 +64,78 @@ func TestUserCreate(t *testing.T) {
 
 }
 
-// func TestFindUserByID(t *testing.T) {
-// 	id := 1
-// 	controller := UsersController{}
-// 	user, err := controller.Show(id)
-// 	if user.ID != 1 || err != nil {
-// 		t.Error("expected to show user but error occured:", user, err)
-// 	}
-// }
+func TestFindUserByID(t *testing.T) {
+	id := 1
+	controller := UsersController{}
+	user, err := controller.Show(id)
+	if user.ID != 1 || err != nil {
+		t.Error("expected to show user but error occured:", user, err)
+	}
+}
 
-// func TestUserLogin(t *testing.T) {
-// 	app := iris.New()
-// 	ctx := context.NewContext(app)
+func TestUserLogin(t *testing.T) {
+	app := iris.New()
+	ctx := context.NewContext(app)
+	setCtxResponse(ctx)
 
-// 	w := context.AcquireResponseWriter()
-// 	hw := httptest.NewRecorder()
-// 	w.BeginResponse(hw)
-// 	ctx.ResetResponseWriter(w)
+	file, _ := os.Open("sample_login_user.json")
+	defer file.Close()
+	setCtxRequest(ctx, file, 500)
 
-// 	file, _ := os.Open("sample_login_user.json")
-// 	defer file.Close()
-// 	newRequest, _ := http.NewRequest("POST", "/login", nil)
-// 	newRequest.ContentLength = 500
-// 	newRequest.Body = file
-// 	ctx.ResetRequest(newRequest)
+	controller := UsersController{}
+	setSession(ctx, &controller)
+	user, err := controller.Login(ctx)
 
-// 	controller := UsersController{}
-// 	cookie := http.Cookie{Name: "sample_cookie_uuid", Value: ""}
-// 	ctx.SetCookie(&cookie)
-// 	sess := sessions.New(sessions.Config{Cookie: "weibo_app_cookie", Expires: 120000000000})
-// 	controller.Session = sess.Start(ctx)
-// 	user, err := controller.Login(ctx)
+	if err != nil {
+		t.Error("expected no error, but an error occured:", err)
+	}
+	if user.ID != 1 {
+		t.Errorf("expected returned user id to be 1, but got %d\n:", user.ID)
+	}
+	id, _ := controller.Session.GetInt("userID")
+	if id != 1 {
+		t.Errorf("expected user id in session to be 1, but got %d\n", id)
+	}
+	if crtUsrID := CurrentUser(ctx, controller.Session).ID; crtUsrID != 1 {
+		t.Errorf("expected current user id to be 1, but got %d\n", crtUsrID)
+	}
+}
 
-// 	if err != nil {
-// 		t.Error("expected no error, but an error occured:", err)
-// 	}
-// 	if user.ID != 1 {
-// 		t.Errorf("expected returned user id to be 1, but got %d\n:", user.ID)
-// 	}
-// 	id, _ := controller.Session.GetInt("userID")
-// 	if id != 1 {
-// 		t.Errorf("expected user id in session to be 1, but got %d\n", id)
-// 	}
-// 	if crtUsrID := CurrentUser(ctx, controller.Session).ID; crtUsrID != 1 {
-// 		t.Errorf("expected current user id to be 1, but got %d\n", crtUsrID)
-// 	}
-// }
+func TestUserLogout(t *testing.T) {
+	app := iris.New()
+	ctx := context.NewContext(app)
+	setCtxResponse(ctx)
+	setCtxRequest(ctx, nil, 0)
+	controller := UsersController{}
+	setSession(ctx, &controller)
+
+	err := controller.Logout()
+	if err.Error() != "not logged in" {
+		t.Errorf("expected get \"not logged in\" but got \"%s\"\n", err.Error())
+	}
+
+	controller.Session.Set("userID", 1)
+	err = controller.Logout()
+	userID, _ := controller.Session.GetInt("userID")
+	if userID >= 0 {
+		t.Errorf("expected user id in session to be -1 but got %d\n", userID)
+	}
+	if err != nil {
+		t.Error("got an error:", err)
+	}
+}
 
 func TestUserUpdate(t *testing.T) {
 	app := iris.New()
 	ctx := context.NewContext(app)
-
-	w := context.AcquireResponseWriter()
-	hw := httptest.NewRecorder()
-	w.BeginResponse(hw)
-	ctx.ResetResponseWriter(w)
+	setCtxResponse(ctx)
 
 	file, _ := os.Open("update_user.json")
 	defer file.Close()
-	newRequest, _ := http.NewRequest("POST", "users/1/edit", nil)
-	newRequest.ContentLength = 500
-	newRequest.Body = file
-	ctx.ResetRequest(newRequest)
+	setCtxRequest(ctx, file, 500)
 
 	controller := UsersController{}
-	cookie := http.Cookie{Name: "sample_cookie_uuid", Value: ""}
-	ctx.SetCookie(&cookie)
-	sess := sessions.New(sessions.Config{Cookie: "weibo_app_cookie", Expires: 120000000000})
-	controller.Session = sess.Start(ctx)
+	setSession(ctx, &controller)
 	user, err := controller.Update(1, ctx)
 
 	if err.Error() != "authenticate failed! please login and try again" {
@@ -137,5 +160,4 @@ func TestUserUpdate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
 }

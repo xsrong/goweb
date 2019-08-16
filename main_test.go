@@ -41,6 +41,19 @@ func TestLoginRoute(t *testing.T) {
 	response.Status(httptest.StatusOK)
 }
 
+func TestLogoutRoute(t *testing.T) {
+	app := weiboApp()
+	e := httptest.New(t, app)
+
+	request := e.Request("POST", "/login")
+	request.WithJSON(map[string]interface{}{"email": "email1@example.com", "password": "password1"})
+	cookie := request.Expect().Cookie("weibo_app_cookie")
+
+	request = e.Request("DELETE", "/logout")
+	request.WithCookie(cookie.Name().Raw(), cookie.Value().Raw())
+	request.Expect().Status(httptest.StatusOK)
+}
+
 func TestUserUpdateRoute(t *testing.T) {
 	app := weiboApp()
 	e := httptest.New(t, app)
@@ -49,7 +62,7 @@ func TestUserUpdateRoute(t *testing.T) {
 	request.WithJSON(map[string]interface{}{"email": "email1@example.com", "password": "password1"})
 	cookie := request.Expect().Cookie("weibo_app_cookie")
 
-	request = e.Request("POST", "/users/1/edit")
+	request = e.Request("PATCH", "/users/1/edit")
 	request.WithJSON(map[string]interface{}{"password": "newPassword", "username": "new username", "message": "new message"})
 	request.WithCookie(cookie.Name().Raw(), cookie.Value().Raw())
 	response := request.Expect()
