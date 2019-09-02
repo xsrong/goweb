@@ -184,6 +184,7 @@ func TestUpdateUser(t *testing.T) {
 		t.Error("test failed at params3")
 	}
 
+	// test with params4
 	params4 := map[string]string{"email": newEmail}
 	if err := user.Update(params4); err != nil {
 		t.Error("got an error:", err)
@@ -193,4 +194,23 @@ func TestUpdateUser(t *testing.T) {
 		t.Error("test failed at params4")
 	}
 
+}
+
+func TestFollowUser(t *testing.T) {
+	e1 := "111@11.com"
+	p1 := "11111111"
+	u1 := "11111"
+	e2 := "222@22.com"
+	p2 := "22222222"
+	u2 := "22222"
+	user1 := User{Email: &e1, Password: &p1, Username: &u1}
+	user2 := User{Email: &e2, Password: &p2, Username: &u2}
+	user1.Create()
+	user2.Create()
+	user1.Follow(user2)
+	var rela Relationship
+	DB.Table("relationships").Where("user_id = ? AND follow_to = ?", user1.ID, user2.ID).Find(&rela)
+	if rela.ID == 0 {
+		t.Error("test follow user failed")
+	}
 }

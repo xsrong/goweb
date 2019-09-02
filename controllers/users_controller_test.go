@@ -96,8 +96,14 @@ func TestUserLogin(t *testing.T) {
 	if id != 1 {
 		t.Errorf("expected user id in session to be 1, but got %d\n", id)
 	}
-	if crtUsrID := CurrentUser(ctx, controller.Session).ID; crtUsrID != 1 {
-		t.Errorf("expected current user id to be 1, but got %d\n", crtUsrID)
+	// if crtUsrID := CurrentUser(ctx, controller.Session).ID; crtUsrID != 1 {
+	// 	t.Errorf("expected current user id to be 1, but got %d\n", crtUsrID)
+	// }
+
+	_, err = controller.Login(ctx)
+
+	if err.Error() != "logged in already" {
+		t.Errorf("expected get \"logged in already\" but got \"%s\"\n", err.Error())
 	}
 }
 
@@ -109,11 +115,13 @@ func TestUserLogout(t *testing.T) {
 	controller := UsersController{}
 	setSession(ctx, &controller)
 
+	// 测试用户未登录时调用UersController#Logout()
 	err := controller.Logout()
 	if err.Error() != "not logged in" {
 		t.Errorf("expected get \"not logged in\" but got \"%s\"\n", err.Error())
 	}
 
+	// 测试用户登录后调用UersController#Logout()
 	controller.Session.Set("userID", 1)
 	err = controller.Logout()
 	userID, _ := controller.Session.GetInt("userID")
@@ -134,6 +142,7 @@ func TestUserUpdate(t *testing.T) {
 	defer file.Close()
 	setCtxRequest(ctx, file, 500)
 
+	// 测试未登录时更新用户信息
 	controller := UsersController{}
 	setSession(ctx, &controller)
 	user, err := controller.Update(1, ctx)
@@ -142,7 +151,15 @@ func TestUserUpdate(t *testing.T) {
 		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
 	}
 
+	// 测试用户已登录，但更新的用户信息非已登录的用户时的情况
 	controller.Session.Set("userID", 1)
+	user, err = controller.Update(2, ctx)
+	
+	if err.Error() != "authenticate failed! please login and try again" {
+		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试用户已登录且更新的用户信息为该用户时的情况
 	user, err = controller.Update(1, ctx)
 
 	if *user.Password != models.Encrypt("newPassword") {

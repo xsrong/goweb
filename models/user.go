@@ -12,6 +12,7 @@ type User struct {
 	Password  *string `gorm:"not null"`
 	Username  *string `gorm:"not null;unique_index"`
 	Message   string
+	Following []User `gorm:"many2many:relationships;association_jointable_foreignkey:follow_to"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -92,9 +93,34 @@ func (u *User) Update(params map[string]string) (err error) {
 	if usn != "" {
 		username = &usn
 	}
-	err = DB.Model(&u).Updates(User{Password: password, Username: username, Message: params["message"]}).Error
+	err = DB.Model(u).Updates(User{Password: password, Username: username, Message: params["message"]}).Error
 	if err != nil {
 		err = errors.New("Error occured when updating user")
+	}
+	return
+}
+
+// func (u *User) IsFollowed(followTo User) (res bool) {
+// 	var rela Relationship
+// 	DB.Table("relationships").Where("user_id = ? AND follow_to = ?", u.ID, followTo.ID).Find(&rela)
+// 	if rela.ID != 0 {
+// 		return true
+// 	}
+// 	return false
+// }
+
+func (u *User) Follow(followTo User) (err error) {
+	err = DB.Model(u).Association("Following").Append(&followTo).Error
+	if err != nil {
+		err = errors.New("Follow failed")
+	}
+	return
+}
+
+func (u *User) Unfollow(followed User) (err error) {
+	err = DB.Model(u).Association("Following").Delete(&followed).Error
+	if err != nil {
+		err = errors.New("Unfollow failed")
 	}
 	return
 }

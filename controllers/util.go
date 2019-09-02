@@ -23,3 +23,13 @@ func CurrentUser(ctx iris.Context, sess *sessions.Session) (user models.User) {
 	}
 	return
 }
+
+func IsLoggedIn(sess *sessions.Session) bool {
+	userID, _ := sess.GetInt("userID")
+	return userID > 0
+}
+
+func IsCurrentUser(userID int, sess *sessions.Session) bool {
+	otherID, _ := sess.GetInt("userID")
+	return userID == otherID
+}

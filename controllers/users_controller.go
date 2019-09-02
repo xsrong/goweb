@@ -42,6 +42,10 @@ func (c *UsersController) Show(id int) (user models.User, err error) {
 }
 
 func (c *UsersController) Login(ctx iris.Context) (user models.User, err error) {
+	if IsLoggedIn(c.Session) {
+		err = errors.New("logged in already")
+		return
+	}
 	if err = ctx.ReadJSON(&user); err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
 		return
@@ -54,8 +58,7 @@ func (c *UsersController) Login(ctx iris.Context) (user models.User, err error) 
 }
 
 func (c *UsersController) Logout() (err error) {
-	_, err = c.Session.GetInt("userID")
-	if err != nil {
+	if !IsLoggedIn(c.Session) {
 		err = errors.New("not logged in")
 		return
 	}
@@ -66,8 +69,12 @@ func (c *UsersController) Logout() (err error) {
 }
 
 func (c *UsersController) Update(id int, ctx iris.Context) (user models.User, err error) {
-	userID, err := c.Session.GetInt("userID")
-	if err != nil || userID != id {
+	// userID, err := c.Session.GetInt("userID")
+	// if err != nil || userID != id {
+	// 	err = errors.New("authenticate failed! please login and try again")
+	// 	return
+	// }
+	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
 		err = errors.New("authenticate failed! please login and try again")
 		return
 	}
