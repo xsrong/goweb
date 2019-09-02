@@ -13,11 +13,12 @@ type User struct {
 	Username  *string `gorm:"not null;unique_index"`
 	Message   string
 	Following []User `gorm:"many2many:relationships;association_jointable_foreignkey:follow_to"`
+	Posts     []Post
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-var QueryKey string = "id, username, message"
+var QueryKey string = "users.id, username, message"
 
 func (u *User) Create() (err error) {
 	if u.Email != nil && !u.isValidEmail() {
@@ -122,5 +123,26 @@ func (u *User) Unfollow(followed User) (err error) {
 	if err != nil {
 		err = errors.New("Unfollow failed")
 	}
+	return
+}
+
+func (u *User) Followings() (users []User, err error) {
+	err = DB.Model(u).Select(QueryKey).Related(&users, "Following").Error
+	if err != nil {
+		err = errors.New("Error occured when getting following users.")
+	}
+	return
+}
+
+func (u *User) Followers() (users []User, err error) {
+	err = DB.Select(QueryKey).Joins("JOIN relationships ON relationships.user_id = users.id").Where("relationships.follow_to = ?", u.ID).Find(&users).Error
+	if err != nil {
+		err = errors.New("Error occured when getting followers.")
+	}
+	return
+}
+
+func (u *User) AddPost(post *Post) (err error) {
+	err = DB.Model(u).Association("Posts").Append(post).Error
 	return
 }

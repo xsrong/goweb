@@ -14,5 +14,5 @@ func init() {
 		panic(err)
 	}
 	DB.LogMode(true)
-	DB.AutoMigrate(&User{}, &Relationship{})
+	DB.AutoMigrate(&User{}, &Relationship{}, &Post{})
 }

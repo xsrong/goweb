@@ -29,7 +29,9 @@ func weiboApp() *iris.Application {
 	)
 	helloWorldController := controllers.HelloWorldController{}
 	usersController := controllers.UsersController{}
+	postsController := controllers.PostsController{}
 	weiboApp.Handle(&helloWorldController)
 	weiboApp.Handle(&usersController)
+	weiboApp.Handle(&postsController)
 	return app
 }

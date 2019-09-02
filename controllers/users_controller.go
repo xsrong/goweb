@@ -24,6 +24,10 @@ func (c *UsersController) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("PATCH", "/users/{id:int}/edit", "Update", middleware)
 	b.Handle("POST", "/login", "Login", middleware)
 	b.Handle("DELETE", "/logout", "Logout", middleware)
+	b.Handle("POST", "/users/{id:int}/follow/{followedID:int}", "Follow", middleware)
+	b.Handle("DELETE", "/users/{id:int}/unfollow/{unfollowID:int}", "Unfollow", middleware)
+	b.Handle("GET", "/users/{id:int}/following", "Following", middleware)
+	b.Handle("GET", "/users/{id:int}/followers", "Followers", middleware)
 }
 
 func (c *UsersController) Create(ctx iris.Context) (user models.User, err error) {
@@ -69,11 +73,6 @@ func (c *UsersController) Logout() (err error) {
 }
 
 func (c *UsersController) Update(id int, ctx iris.Context) (user models.User, err error) {
-	// userID, err := c.Session.GetInt("userID")
-	// if err != nil || userID != id {
-	// 	err = errors.New("authenticate failed! please login and try again")
-	// 	return
-	// }
 	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
 		err = errors.New("authenticate failed! please login and try again")
 		return
@@ -83,10 +82,57 @@ func (c *UsersController) Update(id int, ctx iris.Context) (user models.User, er
 		ctx.StatusCode(iris.StatusBadRequest)
 		return
 	}
-	user, err = models.FindUserByID(id)
-	if err != nil {
+	user = models.User{ID: id}
+	err = user.Update(params)
+	return
+}
+
+func (c *UsersController) Follow(id, followedID int) (err error) {
+	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
+		err = errors.New("authenticate failed! please login and try again.")
 		return
 	}
-	err = user.Update(params)
+	if id == followedID {
+		err = errors.New("cannot follow yourself")
+		return
+	}
+	fromUser := models.User{ID: id}
+	toUser := models.User{ID: followedID}
+	err = fromUser.Follow(toUser)
+	return
+}
+
+func (c *UsersController) Unfollow(id, unfollowID int) (err error) {
+	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
+		err = errors.New("authenticate failed! please login and try again.")
+		return
+	}
+	if id == unfollowID {
+		err = errors.New("cannot unfollow yourself")
+		return
+	}
+	fromUser := models.User{ID: id}
+	toUser := models.User{ID: unfollowID}
+	err = fromUser.Unfollow(toUser)
+	return
+}
+
+func (c *UsersController) Following(id int) (users []models.User, err error) {
+	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
+		err = errors.New("authenticate failed! please login and try again.")
+		return
+	}
+	user := models.User{ID: id}
+	users, err = user.Followings()
+	return
+}
+
+func (c *UsersController) Followers(id int) (users []models.User, err error) {
+	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
+		err = errors.New("authenticate failed! please login and try again.")
+		return
+	}
+	user := models.User{ID: id}
+	users, err = user.Followers()
 	return
 }
