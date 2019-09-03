@@ -1,16 +1,19 @@
 package models
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
 	"testing"
 )
 
-// func setup(filename string) (users []User) {
-// 	file, _ := os.Open(filename)
-// 	defer file.Close()
-// 	data, _ := ioutil.ReadAll(file)
-// 	json.Unmarshal(data, &users)
-// 	return users
-// }
+func setup(filename string) (users []User) {
+	file, _ := os.Open(filename)
+	defer file.Close()
+	data, _ := ioutil.ReadAll(file)
+	json.Unmarshal(data, &users)
+	return users
+}
 
 // func TestUserCreate(t *testing.T) {
 // 	DB.Delete(&User{})
@@ -141,76 +144,157 @@ import (
 // 	}
 // }
 
-func TestUpdateUser(t *testing.T) {
-	oldEmail := "old_email@example.com"
-	newEmail := "new_email@example.com"
-	oldPassword := "oldpassword"
-	newPassword := "newpassword"
-	oldUsername := "old username"
-	newUsername := "new username"
-	oldMessage := "old message"
-	newMessage := "new message"
+// func TestUpdateUser(t *testing.T) {
+// 	oldEmail := "old_email@example.com"
+// 	newEmail := "new_email@example.com"
+// 	oldPassword := "oldpassword"
+// 	newPassword := "newpassword"
+// 	oldUsername := "old username"
+// 	newUsername := "new username"
+// 	oldMessage := "old message"
+// 	newMessage := "new message"
 
-	user := User{Email: &oldEmail, Password: &oldPassword, Username: &oldUsername, Message: oldMessage}
-	user.Create()
+// 	user := User{Email: &oldEmail, Password: &oldPassword, Username: &oldUsername, Message: oldMessage}
+// 	user.Create()
 
-	// test with params1
-	params1 := map[string]string{"password": "", "username": "", "message": ""}
-	if err := user.Update(params1); err != nil {
-		t.Error("got an error:", err)
-	}
-	u, _ := FindUserByEmail(oldEmail)
-	if *u.Password != Encrypt(oldPassword) || *u.Username != oldUsername || u.Message != oldMessage {
-		t.Error("test failed at params1")
-	}
+// 	// test with params1
+// 	params1 := map[string]string{"password": "", "username": "", "message": ""}
+// 	if err := user.Update(params1); err != nil {
+// 		t.Error("got an error:", err)
+// 	}
+// 	u, _ := FindUserByEmail(oldEmail)
+// 	if *u.Password != Encrypt(oldPassword) || *u.Username != oldUsername || u.Message != oldMessage {
+// 		t.Error("test failed at params1")
+// 	}
 
-	// test with params2
-	params2 := map[string]string{"password": newPassword, "username": "", "message": ""}
-	if err := user.Update(params2); err != nil {
-		t.Error("got an error:", err)
-	}
-	u, _ = FindUserByEmail(oldEmail)
-	if *u.Password != Encrypt(newPassword) || *u.Username != oldUsername || u.Message != oldMessage {
-		t.Error("test failed at params2")
-	}
+// 	// test with params2
+// 	params2 := map[string]string{"password": newPassword, "username": "", "message": ""}
+// 	if err := user.Update(params2); err != nil {
+// 		t.Error("got an error:", err)
+// 	}
+// 	u, _ = FindUserByEmail(oldEmail)
+// 	if *u.Password != Encrypt(newPassword) || *u.Username != oldUsername || u.Message != oldMessage {
+// 		t.Error("test failed at params2")
+// 	}
 
-	// test with params3
-	params3 := map[string]string{"password": newPassword, "username": newUsername, "message": newMessage}
-	if err := user.Update(params3); err != nil {
-		t.Error("got an error:", err)
-	}
-	u, _ = FindUserByEmail(oldEmail)
-	if *u.Password != Encrypt(newPassword) || *u.Username != newUsername || u.Message != newMessage {
-		t.Error("test failed at params3")
-	}
+// 	// test with params3
+// 	params3 := map[string]string{"password": newPassword, "username": newUsername, "message": newMessage}
+// 	if err := user.Update(params3); err != nil {
+// 		t.Error("got an error:", err)
+// 	}
+// 	u, _ = FindUserByEmail(oldEmail)
+// 	if *u.Password != Encrypt(newPassword) || *u.Username != newUsername || u.Message != newMessage {
+// 		t.Error("test failed at params3")
+// 	}
 
-	// test with params4
-	params4 := map[string]string{"email": newEmail}
-	if err := user.Update(params4); err != nil {
-		t.Error("got an error:", err)
-	}
-	u, _ = FindUserByEmail(newEmail)
-	if u.ID != 0 {
-		t.Error("test failed at params4")
-	}
+// 	// test with params4
+// 	params4 := map[string]string{"email": newEmail}
+// 	if err := user.Update(params4); err != nil {
+// 		t.Error("got an error:", err)
+// 	}
+// 	u, _ = FindUserByEmail(newEmail)
+// 	if u.ID != 0 {
+// 		t.Error("test failed at params4")
+// 	}
 
+// }
+
+// func TestFollowUser(t *testing.T) {
+// 	e1 := "111@11.com"
+// 	p1 := "11111111"
+// 	u1 := "11111"
+// 	e2 := "222@22.com"
+// 	p2 := "22222222"
+// 	u2 := "22222"
+// 	user1 := User{Email: &e1, Password: &p1, Username: &u1}
+// 	user2 := User{Email: &e2, Password: &p2, Username: &u2}
+// 	user1.Create()
+// 	user2.Create()
+// 	user1.Follow(user2)
+// 	var rela Relationship
+// 	DB.Table("relationships").Where("user_id = ? AND follow_to = ?", user1.ID, user2.ID).Find(&rela)
+// 	if rela.ID == 0 {
+// 		t.Error("test follow user failed")
+// 	}
+// }
+
+// func TestUnfollowUser(t *testing.T) {
+// 	user1, _ := FindUserByEmail("111@11.com")
+// 	user2, _ := FindUserByEmail("222@22.com")
+// 	user1.Unfollow(user2)
+// 	var rela Relationship
+// 	DB.Table("relationships").Where("user_id = ? AND follow_to = ?", user1.ID, user2.ID).Find(&rela)
+// 	if rela.ID != 0 {
+// 		t.Error("test unfollow user failed")
+// 	}
+// }
+
+func CompareUserSlices(users1, users2 []User) bool {
+	if len(users1) != len(users2) {
+		return false
+	}
+	for i, v := range users1 {
+		if v.ID != users2[i].ID {
+			return false
+		}
+	}
+	return true
 }
 
-func TestFollowUser(t *testing.T) {
-	e1 := "111@11.com"
-	p1 := "11111111"
-	u1 := "11111"
-	e2 := "222@22.com"
-	p2 := "22222222"
-	u2 := "22222"
-	user1 := User{Email: &e1, Password: &p1, Username: &u1}
-	user2 := User{Email: &e2, Password: &p2, Username: &u2}
-	user1.Create()
-	user2.Create()
-	user1.Follow(user2)
-	var rela Relationship
-	DB.Table("relationships").Where("user_id = ? AND follow_to = ?", user1.ID, user2.ID).Find(&rela)
-	if rela.ID == 0 {
-		t.Error("test follow user failed")
+func TestGetFollowing(t *testing.T) {
+	users := setup("test_follow_user_data.json")
+	for index, u := range users {
+		u.Create()
+		users[index] = u
 	}
+
+	for i := 1; i < len(users); i++ {
+		users[0].Follow(users[i])
+	}
+
+	following, _ := users[0].Followings()
+	expectedFollowing := []User{users[1], users[2], users[3], users[4]}
+	if !CompareUserSlices(following, expectedFollowing) {
+		t.Error("get following failed")
+	}
+}
+
+func TestGetFollower(t *testing.T) {
+	users := setup("test_follow_user_data.json")
+	for index, u := range users {
+		us, _ := FindUserByEmail(*u.Email)
+		users[index] = us
+	}
+
+	for i := 1; i < len(users)-1; i++ {
+		users[i].Follow(users[len(users)-1])
+	}
+
+	followers, _ := users[len(users)-1].Followers()
+	expectedFollowers := []User{users[0], users[1], users[2], users[3]}
+	if !CompareUserSlices(followers, expectedFollowers) {
+		t.Error("get followers failed")
+	}
+
+	users[1].Follow(users[0])
+}
+
+func TestIsFollowEachOther(t *testing.T) {
+	user, _ := FindUserByID(1)
+	otherUser1, _ := FindUserByID(2)
+	otherUser2, _ := FindUserByID(3)
+
+	user.Follow(otherUser1)
+	otherUser1.Follow(user)
+
+	res1 := user.IsFollowEachOther(otherUser1)
+	if !res1 {
+		t.Error("user and otherUser1 is followed each other but test failed with false")
+	}
+
+	res2 := user.IsFollowEachOther(otherUser2)
+	if res2 {
+		t.Error("user and otherUSer2 is not followed each other but test failed with true")
+	}
+
 }

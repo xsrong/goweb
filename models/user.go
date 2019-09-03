@@ -142,7 +142,20 @@ func (u *User) Followers() (users []User, err error) {
 	return
 }
 
+func (u *User) IsFollowEachOther(otherUser User) (res bool) {
+	var rela Relationship
+	DB.Raw("SELECT * FROM relationships WHERE user_id = ? AND follow_to = ? AND EXISTS (SELECT id FROM relationships WHERE (user_id = ? and follow_to = ?))", u.ID, otherUser.ID, otherUser.ID, u.ID).Find(&rela)
+	if rela.ID != 0 {
+		res = true
+	}
+	return
+}
+
 func (u *User) AddPost(post *Post) (err error) {
+	err = post.Create()
+	if err != nil {
+		return
+	}
 	err = DB.Model(u).Association("Posts").Append(post).Error
 	return
 }

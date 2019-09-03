@@ -1,0 +1,36 @@
+[
+  {
+    "email": "email1@exam.com",
+    "password": "password1",
+    "username": "username1",
+    "message":  "message1"
+  },
+
+  {
+    "email":    "email2@exam.com",
+    "password": "password2",
+    "username": "username2",
+    "message":  "message2"
+  },
+
+  {
+    "email":    "email3@exam.com",
+    "password": "password3",
+    "username": "username3",
+    "message":  "message3"
+  },
+
+  {
+    "email":    "email4@exam.com",
+    "password": "password4",
+    "username": "username4",
+    "message": "message4"
+  },
+
+  {
+    "email":    "email5@exam.com",
+    "password": "password5",
+    "username": "username5",
+    "message":  "message5"
+  }
+]

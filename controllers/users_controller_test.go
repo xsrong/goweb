@@ -154,7 +154,7 @@ func TestUserUpdate(t *testing.T) {
 	// 测试用户已登录，但更新的用户信息非已登录的用户时的情况
 	controller.Session.Set("userID", 1)
 	user, err = controller.Update(2, ctx)
-	
+
 	if err.Error() != "authenticate failed! please login and try again" {
 		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
 	}
@@ -176,5 +176,157 @@ func TestUserUpdate(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestUserFlollow(t *testing.T) {
+	app := iris.New()
+	ctx := context.NewContext(app)
+	setCtxResponse(ctx)
+	setCtxRequest(ctx, nil, 0)
+	controller := UsersController{}
+	setSession(ctx, &controller)
+
+	email := "email2@sample.com"
+	password := "password2"
+	username := "username2"
+	anotherUser := models.User{Email: &email, Password: &password, Username: &username}
+	anotherUser.Create()
+
+	// 测试用户未登录时关注其他用户
+	err := controller.Follow(2, 1)
+	if err.Error() != "authenticate failed! please login and try again" {
+		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试发起关注的用户不是登录用户的情况
+	controller.Session.Set("userID", 1)
+	err = controller.Follow(2, 1)
+	if err.Error() != "authenticate failed! please login and try again" {
+		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试用户关注自己的情况
+	controller.Session.Set("userID", 2)
+	err = controller.Follow(2, 2)
+	if err.Error() != "cannot follow yourself" {
+		t.Errorf("expected \"cannot follow yourself\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试正常关注的情况
+	controller.Session.Set("userID", 2)
+	err = controller.Follow(2, 1)
+	if err != nil {
+		t.Errorf("expected no error but got \"%s\"\n", err.Error())
+	}
+}
+
+func TestUserUnfollow(t *testing.T) {
+	app := iris.New()
+	ctx := context.NewContext(app)
+	setCtxResponse(ctx)
+	setCtxRequest(ctx, nil, 0)
+	controller := UsersController{}
+	setSession(ctx, &controller)
+
+	// 测试用户未登录时取消关注其他用户
+	err := controller.Unfollow(2, 1)
+	if err.Error() != "authenticate failed! please login and try again" {
+		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试发起取消关注的用户不是登录用户的情况
+	controller.Session.Set("userID", 1)
+	err = controller.Unfollow(2, 1)
+	if err.Error() != "authenticate failed! please login and try again" {
+		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试用户对自己取消关注的情况
+	controller.Session.Set("userID", 2)
+	err = controller.Unfollow(2, 2)
+	if err.Error() != "cannot unfollow yourself" {
+		t.Errorf("expected \"cannot unfollow yourself\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试正常取消关注的情况
+	controller.Session.Set("userID", 2)
+	err = controller.Unfollow(2, 1)
+	if err != nil {
+		t.Errorf("expected no error but got \"%s\"\n", err.Error())
+	}
+}
+
+func setupUserFollowingAndFollowers() {
+	user1, _ := models.FindUserByID(1)
+	user2, _ := models.FindUserByID(2)
+	user3, _ := models.FindUserByID(3)
+
+	user1.Follow(user2)
+	user1.Follow(user3)
+	user2.Follow(user3)
+}
+
+func TestGetUserFollowing(t *testing.T) {
+	app := iris.New()
+	ctx := context.NewContext(app)
+	setCtxResponse(ctx)
+	setCtxRequest(ctx, nil, 0)
+	controller := UsersController{}
+	setSession(ctx, &controller)
+
+	email := "email3@sample.com"
+	password := "password3"
+	username := "username3"
+	anotherUser := models.User{Email: &email, Password: &password, Username: &username}
+	anotherUser.Create()
+
+	setupUserFollowingAndFollowers()
+
+	// 测试未登录时请求全部关注对象
+	_, err := controller.Following(1)
+	if err.Error() != "authenticate failed! please login and try again" {
+		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试请求当前登录用户以外的其他用户的关注对象
+	controller.Session.Set("userID", 1)
+	_, err = controller.Following(2)
+	if err.Error() != "authenticate failed! please login and try again" {
+		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试正常请求用户的关注对象
+	_, err = controller.Following(1)
+	if err != nil {
+		t.Errorf("expected no error but got \"%s\"\n", err.Error())
+	}
+}
+
+func TestGetUserFollowers(t *testing.T) {
+	app := iris.New()
+	ctx := context.NewContext(app)
+	setCtxResponse(ctx)
+	setCtxRequest(ctx, nil, 0)
+	controller := UsersController{}
+	setSession(ctx, &controller)
+
+	// 测试未登录时请求被谁关注
+	_, err := controller.Followers(3)
+	if err.Error() != "authenticate failed! please login and try again" {
+		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试请求当前登录用户以外的其他用户的被谁关注
+	controller.Session.Set("userID", 3)
+	_, err = controller.Followers(2)
+	if err.Error() != "authenticate failed! please login and try again" {
+		t.Errorf("expected \"authenticate failed! please login and try again\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试正常请求当前用户被谁关注
+	_, err = controller.Followers(3)
+	if err != nil {
+		t.Errorf("expected no error but got \"%s\"\n", err.Error())
 	}
 }

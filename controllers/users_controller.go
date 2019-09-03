@@ -89,7 +89,7 @@ func (c *UsersController) Update(id int, ctx iris.Context) (user models.User, er
 
 func (c *UsersController) Follow(id, followedID int) (err error) {
 	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
-		err = errors.New("authenticate failed! please login and try again.")
+		err = errors.New("authenticate failed! please login and try again")
 		return
 	}
 	if id == followedID {
@@ -104,7 +104,7 @@ func (c *UsersController) Follow(id, followedID int) (err error) {
 
 func (c *UsersController) Unfollow(id, unfollowID int) (err error) {
 	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
-		err = errors.New("authenticate failed! please login and try again.")
+		err = errors.New("authenticate failed! please login and try again")
 		return
 	}
 	if id == unfollowID {
@@ -119,7 +119,7 @@ func (c *UsersController) Unfollow(id, unfollowID int) (err error) {
 
 func (c *UsersController) Following(id int) (users []models.User, err error) {
 	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
-		err = errors.New("authenticate failed! please login and try again.")
+		err = errors.New("authenticate failed! please login and try again")
 		return
 	}
 	user := models.User{ID: id}
@@ -129,7 +129,7 @@ func (c *UsersController) Following(id int) (users []models.User, err error) {
 
 func (c *UsersController) Followers(id int) (users []models.User, err error) {
 	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
-		err = errors.New("authenticate failed! please login and try again.")
+		err = errors.New("authenticate failed! please login and try again")
 		return
 	}
 	user := models.User{ID: id}

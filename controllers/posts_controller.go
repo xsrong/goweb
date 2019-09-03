@@ -23,11 +23,11 @@ func (c *PostsController) BeforeActivation(b mvc.BeforeActivation) {
 }
 
 func (c *PostsController) Create(ctx iris.Context) (post models.Post, err error) {
-	currentUserID, err := c.Session.GetInt("userID")
-	if err != nil {
+	if !IsLoggedIn(c.Session) {
 		err = errors.New("authenticate failed! please login and try again")
 		return
 	}
+	currentUserID, _ := c.Session.GetInt("userID")
 	currentUser, err := models.FindUserByID(currentUserID)
 	if err != nil {
 		err = errors.New("authenticate failed! please login and try again")

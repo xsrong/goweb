@@ -9,6 +9,7 @@ type Post struct {
 	ID        int
 	Content   *string `gorm:"not null"`
 	UserID    int
+	Likes     int
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
