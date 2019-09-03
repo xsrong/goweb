@@ -77,10 +77,6 @@ func TestFollowUserRoute(t *testing.T) {
 	request.WithJSON(map[string]interface{}{"email": "email2@example.com", "password": "password2", "username": "username2", "message": "message2"})
 	request.Expect()
 
-	request = e.Request("POST", "/users/new")
-	request.WithJSON(map[string]interface{}{"email": "email3@example.com", "password": "password3", "username": "username3", "message": "message3"})
-	request.Expect()
-
 	request = e.Request("POST", "/login")
 	request.WithJSON(map[string]interface{}{"email": "email1@example.com", "password": "newPassword"})
 	cookie := request.Expect().Cookie("weibo_app_cookie")
@@ -107,7 +103,11 @@ func TestGetFollowingRoute(t *testing.T) {
 	app := weiboApp()
 	e := httptest.New(t, app)
 
-	request := e.Request("POST", "/login")
+	request := e.Request("POST", "/users/new")
+	request.WithJSON(map[string]interface{}{"email": "email3@example.com", "password": "password3", "username": "username3", "message": "message3"})
+	request.Expect()
+
+	request = e.Request("POST", "/login")
 	request.WithJSON(map[string]interface{}{"email": "email1@example.com", "password": "newPassword"})
 	cookie := request.Expect().Cookie("weibo_app_cookie")
 

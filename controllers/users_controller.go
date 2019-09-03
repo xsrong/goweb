@@ -24,7 +24,7 @@ func (c *UsersController) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("PATCH", "/users/{id:int}/edit", "Update", middleware)
 	b.Handle("POST", "/login", "Login", middleware)
 	b.Handle("DELETE", "/logout", "Logout", middleware)
-	b.Handle("POST", "/users/{id:int}/follow/{followedID:int}", "Follow", middleware)
+	b.Handle("POST", "/users/{id:int}/follow/{followeID:int}", "Follow", middleware)
 	b.Handle("DELETE", "/users/{id:int}/unfollow/{unfollowID:int}", "Unfollow", middleware)
 	b.Handle("GET", "/users/{id:int}/following", "Following", middleware)
 	b.Handle("GET", "/users/{id:int}/followers", "Followers", middleware)
@@ -87,17 +87,17 @@ func (c *UsersController) Update(id int, ctx iris.Context) (user models.User, er
 	return
 }
 
-func (c *UsersController) Follow(id, followedID int) (err error) {
+func (c *UsersController) Follow(id, followeID int) (err error) {
 	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
 		err = errors.New("authenticate failed! please login and try again")
 		return
 	}
-	if id == followedID {
+	if id == followeID {
 		err = errors.New("cannot follow yourself")
 		return
 	}
 	fromUser := models.User{ID: id}
-	toUser := models.User{ID: followedID}
+	toUser := models.User{ID: followeID}
 	err = fromUser.Follow(toUser)
 	return
 }
