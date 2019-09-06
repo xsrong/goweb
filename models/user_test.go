@@ -218,83 +218,81 @@ func TestFollowUser(t *testing.T) {
 	}
 }
 
-// func TestUnfollowUser(t *testing.T) {
-// 	user1, _ := FindUserByEmail("111@11.com")
-// 	user2, _ := FindUserByEmail("222@22.com")
-// 	user1.Unfollow(user2)
-// 	var rela Relationship
-// 	DB.Table("relationships").Where("user_id = ? AND follow_to = ?", user1.ID, user2.ID).Find(&rela)
-// 	if rela.ID != 0 {
-// 		t.Error("test unfollow user failed")
-// 	}
-// }
+func TestUnfollowUser(t *testing.T) {
+	user1, _ := FindUserByEmail("111@11.com")
+	user2, _ := FindUserByEmail("222@22.com")
+	user1.Unfollow(user2)
+	var rela Relationship
+	DB.Table("relationships").Where("user_id = ? AND follow_to = ?", user1.ID, user2.ID).Find(&rela)
+	if rela.ID != 0 {
+		t.Error("test unfollow user failed")
+	}
+}
 
-// func CompareUserSlices(users1, users2 []User) bool {
-// 	if len(users1) != len(users2) {
-// 		return false
-// 	}
-// 	for i, v := range users1 {
-// 		if v.ID != users2[i].ID {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
+func compareUserSlices(users1, users2 []User) bool {
+	if len(users1) != len(users2) {
+		return false
+	}
+	for i, v := range users1 {
+		if v.ID != users2[i].ID {
+			return false
+		}
+	}
+	return true
+}
 
-// func TestGetFollowing(t *testing.T) {
-// 	users := setup("test_follow_user_data.json")
-// 	for index, u := range users {
-// 		u.Create()
-// 		users[index] = u
-// 	}
+func TestGetFollowing(t *testing.T) {
+	users := setup("test_follow_user_data.json")
+	for index, u := range users {
+		u.Create()
+		users[index] = u
+	}
 
-// 	for i := 1; i < len(users); i++ {
-// 		users[0].Follow(users[i])
-// 	}
+	for i := 1; i < len(users); i++ {
+		users[0].Follow(users[i])
+	}
 
-// 	following, _ := users[0].Followings()
-// 	expectedFollowing := []User{users[1], users[2], users[3], users[4]}
-// 	if !CompareUserSlices(following, expectedFollowing) {
-// 		t.Error("get following failed")
-// 	}
-// }
+	following, _ := users[0].Followings()
+	expectedFollowing := []User{users[1], users[2], users[3], users[4]}
+	if !compareUserSlices(following, expectedFollowing) {
+		t.Error("get following failed")
+	}
+}
 
-// func TestGetFollower(t *testing.T) {
-// 	users := setup("test_follow_user_data.json")
-// 	for index, u := range users {
-// 		us, _ := FindUserByEmail(*u.Email)
-// 		users[index] = us
-// 	}
+func TestGetFollowers(t *testing.T) {
+	users := setup("test_follow_user_data.json")
+	for index, u := range users {
+		us, _ := FindUserByEmail(*u.Email)
+		users[index] = us
+	}
 
-// 	for i := 1; i < len(users)-1; i++ {
-// 		users[i].Follow(users[len(users)-1])
-// 	}
+	for i := 1; i < len(users)-1; i++ {
+		users[i].Follow(users[len(users)-1])
+	}
 
-// 	followers, _ := users[len(users)-1].Followers()
-// 	expectedFollowers := []User{users[0], users[1], users[2], users[3]}
-// 	if !CompareUserSlices(followers, expectedFollowers) {
-// 		t.Error("get followers failed")
-// 	}
+	followers, _ := users[len(users)-1].Followers()
+	expectedFollowers := []User{users[0], users[1], users[2], users[3]}
+	if !compareUserSlices(followers, expectedFollowers) {
+		t.Error("get followers failed")
+	}
+}
 
-// 	users[1].Follow(users[0])
-// }
+func TestIsFollowEachOther(t *testing.T) {
+	user, _ := FindUserByID(1)
+	otherUser1, _ := FindUserByID(2)
+	otherUser2, _ := FindUserByID(3)
 
-// func TestIsFollowEachOther(t *testing.T) {
-// 	user, _ := FindUserByID(1)
-// 	otherUser1, _ := FindUserByID(2)
-// 	otherUser2, _ := FindUserByID(3)
+	user.Follow(otherUser1)
+	otherUser1.Follow(user)
 
-// 	user.Follow(otherUser1)
-// 	otherUser1.Follow(user)
+	res1 := user.IsFollowEachOther(otherUser1)
+	if !res1 {
+		t.Error("user and otherUser1 is followed each other but test failed with false")
+	}
 
-// 	res1 := user.IsFollowEachOther(otherUser1)
-// 	if !res1 {
-// 		t.Error("user and otherUser1 is followed each other but test failed with false")
-// 	}
+	res2 := user.IsFollowEachOther(otherUser2)
+	if res2 {
+		t.Error("user and otherUSer2 is not followed each other but test failed with true")
+	}
 
-// 	res2 := user.IsFollowEachOther(otherUser2)
-// 	if res2 {
-// 		t.Error("user and otherUSer2 is not followed each other but test failed with true")
-// 	}
-
-// }
+}

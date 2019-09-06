@@ -213,6 +213,12 @@ func TestUserFlollow(t *testing.T) {
 		t.Errorf("expected \"cannot follow yourself\" but got \"%s\"\n", err.Error())
 	}
 
+	// 测试关注不存在的用户
+	err = controller.Follow(2, 999)
+	if err.Error() != "Cannot find such user" {
+		t.Errorf("expected \"Cannot find such user\" but got \"%s\"\n", err.Error())
+	}
+
 	// 测试正常关注的情况
 	controller.Session.Set("userID", 2)
 	err = controller.Follow(2, 1)
@@ -247,6 +253,12 @@ func TestUserUnfollow(t *testing.T) {
 	err = controller.Unfollow(2, 2)
 	if err.Error() != "cannot unfollow yourself" {
 		t.Errorf("expected \"cannot unfollow yourself\" but got \"%s\"\n", err.Error())
+	}
+
+	// 测试取消关注不存在的用户
+	err = controller.Unfollow(2, 999)
+	if err.Error() != "Cannot find such user" {
+		t.Errorf("expected \"Cannot find such user\" but got \"%s\"\n", err.Error())
 	}
 
 	// 测试正常取消关注的情况

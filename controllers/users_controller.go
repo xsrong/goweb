@@ -87,17 +87,20 @@ func (c *UsersController) Update(id int, ctx iris.Context) (user models.User, er
 	return
 }
 
-func (c *UsersController) Follow(id, followeID int) (err error) {
+func (c *UsersController) Follow(id, followID int) (err error) {
 	if !IsLoggedIn(c.Session) || !IsCurrentUser(id, c.Session) {
 		err = errors.New("authenticate failed! please login and try again")
 		return
 	}
-	if id == followeID {
+	if id == followID {
 		err = errors.New("cannot follow yourself")
 		return
 	}
 	fromUser := models.User{ID: id}
-	toUser := models.User{ID: followeID}
+	toUser, err := models.FindUserByID(followID)
+	if err != nil {
+		return
+	}
 	err = fromUser.Follow(toUser)
 	return
 }
@@ -112,7 +115,10 @@ func (c *UsersController) Unfollow(id, unfollowID int) (err error) {
 		return
 	}
 	fromUser := models.User{ID: id}
-	toUser := models.User{ID: unfollowID}
+	toUser, err := models.FindUserByID(unfollowID)
+	if err != nil {
+		return
+	}
 	err = fromUser.Unfollow(toUser)
 	return
 }

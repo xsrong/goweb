@@ -129,7 +129,7 @@ func (u *User) Unfollow(followed User) (err error) {
 func (u *User) Followings() (users []User, err error) {
 	err = DB.Model(u).Select(QueryKey).Related(&users, "Following").Error
 	if err != nil {
-		err = errors.New("Error occured when getting following users.")
+		err = errors.New("Error occured when getting following users")
 	}
 	return
 }
@@ -137,7 +137,7 @@ func (u *User) Followings() (users []User, err error) {
 func (u *User) Followers() (users []User, err error) {
 	err = DB.Select(QueryKey).Joins("JOIN relationships ON relationships.user_id = users.id").Where("relationships.follow_to = ?", u.ID).Find(&users).Error
 	if err != nil {
-		err = errors.New("Error occured when getting followers.")
+		err = errors.New("Error occured when getting followers")
 	}
 	return
 }

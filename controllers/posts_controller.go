@@ -28,11 +28,7 @@ func (c *PostsController) Create(ctx iris.Context) (post models.Post, err error)
 		return
 	}
 	currentUserID, _ := c.Session.GetInt("userID")
-	currentUser, err := models.FindUserByID(currentUserID)
-	if err != nil {
-		err = errors.New("authenticate failed! please login and try again")
-		return
-	}
+	currentUser, _ := models.FindUserByID(currentUserID)
 	if err = ctx.ReadJSON(&post); err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
 		return
